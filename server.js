@@ -20,8 +20,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/user", userRoutes);
 
 // Démarrage du serveur Express
-const PORT = process.env.PORT || 3000; // Utilisation du port spécifié dans les variables d'environnement ou du port 3000 par défaut
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Listening on port ${process.env.PORT}`);
 });
