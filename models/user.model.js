@@ -54,6 +54,19 @@ userSchema.pre("save", async function (next) {
   // = Passer à la prochaine étape
   next();
 });
+// "function" afin de pouvoir utiliser this (pour ne pas perdre le contexte de scope)
+userSchema.statics.login = async function (email, password) {
+  const user = await this.findOne({ email });
+  if (user) {
+    const auth = await bcrypt.compare(password, user.password);
+    if (auth) {
+      return user;
+    }
+    // Stoppe et déclenche l'erreur
+    throw Error("incorrect password");
+  }
+  throw Error("incorrect password");
+};
 
 // Création du modèle user à partir du userSchema
 const UserModel = mongoose.model("user", userSchema);
