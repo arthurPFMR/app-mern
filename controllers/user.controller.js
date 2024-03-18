@@ -45,11 +45,16 @@ module.exports.updateUser = async (req, res) => {
     const updatedUser = await UserModel.findOneAndUpdate(
       { _id: req.params.id },
       {
+        // Dans MongoDB, l’opérateur $set est utilisé pour mettre à jour la valeur d’un champ spécifique dans un document. Si le champ n’existe pas, $set l’ajoutera avec la valeur spécifiée.
         $set: {
           bio: req.body.bio,
         },
       },
+      // Option passée à la méthode findOneAndUpdate de Mongoose
       { new: true, upsert: true, setDefaultsOnInsert: true }
+      // new: true : option indiquant que la méthode doit renvoyer le document après la maj. Si cette option n’est pas définie ou est définie à false, la méthode renverra le document avant la maj.
+      // upsert: true : cette option crée un nouveau document si aucun doc ne correspond à la condition de recherche. Dans ce cas, si aucun user ne correspond à l’ID spécifié, un nouvel user sera créé.
+      // setDefaultsOnInsert: true : si un nouveau document est créé via l'option upsert: true, cette option appliquera les valeurs par défaut définies dans le modèle Mongoose à ce nouveau document.
     );
 
     // Pas d'erreur = envoi des informations (MAJ) de l'user

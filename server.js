@@ -11,7 +11,7 @@ require("dotenv").config({ path: "./config/.env" });
 require("./config/db");
 
 // importation de la vérification de user (jwt)
-const { checkUser } = require("./middlware/auth.middleware");
+const { checkUser, requireAuth } = require("./middlware/auth.middleware");
 
 // Création de l'app Express
 const app = express();
@@ -21,8 +21,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// JWT - à chaque requète on vérifie avec checkUser
-app.get("*", checkUser);
+// JWT
+app.get("*", checkUser); // À chaque requète on vérifie avec checkUser
+app.get("/jwtid", requireAuth, (req, res) => {
+  res.status(200).send(res.locals.user._id);
+});
 
 // Routes
 app.use("/api/user", userRoutes);

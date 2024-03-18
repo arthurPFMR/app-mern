@@ -17,24 +17,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       validate: [isEmail], // Validation de l'email en utilisant le module validator (regex)
+      unique: true,
       lowercase: true,
       trim: true,
     },
     password: {
       type: String,
       required: true,
-      max: 1024,
-      minLength: 6,
+      max: 64,
+      minlength: 6,
     },
     bio: {
       type: String,
-      max: 1024,
-    },
-    followers: {
-      type: [String],
-    },
-    following: {
-      type: [String],
+      max: 1000,
     },
     likes: {
       type: [String],
@@ -65,7 +60,7 @@ userSchema.statics.login = async function (email, password) {
     // Stoppe et déclenche l'erreur
     throw Error("incorrect password");
   }
-  throw Error("incorrect password");
+  throw Error("incorrect email");
 };
 
 // Création du modèle user à partir du userSchema
