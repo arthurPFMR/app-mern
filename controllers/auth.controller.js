@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { signUpErrors, signInErrors } = require("../utils/error.utils");
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
+
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.TOKEN_SECRET, {
     expiresIn: maxAge,
@@ -35,13 +36,17 @@ module.exports.signIn = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Tentative de connexion de l'user en utilisant la méthode login du modèle UserModel
+    // Cette méthode vérifie si l'email existe dans la base de données et si le MDP correspond
     const user = await UserModel.login(email, password);
+    // Si la connexion est réussie, un token JWT est créé pour l'user
     const token = createToken(user._id);
+    // Le token est ensuite stocké dans un cookie httpOnly pour des raisons de sécurité et reste dans les cookies selon maxAge
     res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge });
     res.status(200).json({ user: user._id });
   } catch (err) {
-    // Gestion des erreurs avec errors.utils
-    const errors = signInErrors(err)
+    // Gestion des erreurs avec errors.utils si la tentative de connexion échoue
+    const errors = signInErrors(err);
     res.status(500).json({ errors });
   }
 };
@@ -50,6 +55,8 @@ module.exports.signIn = async (req, res) => {
 //
 // Fonction pour gérer la déconnexion de user__________________________________
 module.exports.logout = (req, res) => {
+  // Suppression du cookie jwt
   res.cookie("jwt", "", { maxAge: 1 });
+  // retour page d'accueil
   res.redirect("/");
 };

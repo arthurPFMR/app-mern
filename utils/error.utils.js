@@ -1,9 +1,10 @@
+// Fonction de gestion d'erreur pour línscription______________________________
 module.exports.signUpErrors = (err) => {
   let errors = { pseudo: "", email: "", password: "" };
   // -------------------
   if (err.message.includes("pseudo"))
     errors.pseudo = "Désolé, le pseudo est incorrect ou déjà utilisé";
-
+// 11000 code erreur depuis mongoDB
   if (err.code === 11000 && Object.keys(err.keyValue)[0].includes("pseudo"))
     errors.pseudo = "Ce pseudo existe déjà";
   // -------------------
@@ -19,6 +20,9 @@ module.exports.signUpErrors = (err) => {
   return errors;
 };
 
+// 
+// 
+// Fonction de gestion d'erreur pour la connexion_____________________________
 module.exports.signInErrors = (err) => {
   let errors = { email: "", password: "" };
 
