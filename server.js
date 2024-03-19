@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser"); // Middleware pour analyser les c
 
 // Importation des routes utilisateur
 const userRoutes = require("./routes/user.routes");
+const postRoutes = require("./routes/post.routes");
 
 // Configuration des variables d'environnement
 require("dotenv").config({ path: "./config/.env" });
@@ -30,8 +31,9 @@ app.get("/jwtid", requireAuth, (req, res) => {
   res.status(200).send(res.locals.user._id);
 });
 
-// Utilisation des routes utilisateur__________________________________________
+// Utilisation des routes user__________________________________________
 app.use("/api/user", userRoutes);
+app.use("/api/post", postRoutes);
 
 // Démarrage du serveur Express sur le port spécifié dans les variables d'environnement
 app.listen(process.env.PORT, () => {
