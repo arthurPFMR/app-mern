@@ -18,9 +18,9 @@ module.exports.createPost = async (req, res) => {
 
   try {
     // Tentative de sauvegarde du new post dans la BD
-    const post = await newPost.save();
+    const docs = await newPost.save();
     // Si sauvegarde ok, réponse 201 + post
-    return res.status(201).json(post);
+    return res.status(201).json(docs);
   } catch (err) {
     // Si erreur, log de l'erreur
     return res.status(400).send(err);
@@ -29,13 +29,13 @@ module.exports.createPost = async (req, res) => {
 
 //
 //
-// Fonction pour afficher un post______________________________________________
+// Fonction pour afficher les post____________________________________________
 module.exports.readPost = async (req, res) => {
   try {
     // Tentative de recherche de tous les posts dans la BD
     const docs = await PostModel.find();
-    // Si recherche ok, les posts sont envoyés en réponse
-    res.send(docs);
+    // Si recherche ok, les posts sont envoyés en réponse (affichage + récent)
+    res.send(docs).sort({ createdAt: -1 });
   } catch (err) {
     // Si erreur, log de l'erreur
     console.log("Failed to get data : " + err);
@@ -81,7 +81,7 @@ module.exports.deletePost = async (req, res) => {
     // Tentative de suppression du post dans la BD
     const docs = await PostModel.findByIdAndDelete(req.params.id);
     // Si la suppression ok, le post supprimé est envoyé en réponse
-    if (!docs) throw Error("No post found");
+    if (!docs) throw Error("No post found :" + err);
     res.send(docs);
   } catch (err) {
     // Si erreur, log de l'erreur
@@ -98,40 +98,164 @@ module.exports.likePost = async (req, res) => {
     return res.status(400).send("Unknown ID : " + req.params.id);
 
   try {
-    // Tentative de mise à jour du post dans la base de données
-    const post = await PostModel.findByIdAndUpdate(
+    // Tentative de MAJ du post dans la BD
+    const docs = await PostModel.findByIdAndUpdate(
       req.params.id,
+      // $addToSet = ajout
       { $addToSet: { likers: req.body.id } },
       { new: true }
     );
 
-    // Si une erreur se produit lors de la mise à jour du post, une réponse avec un statut 400 est renvoyée, contenant l'erreur
-    if (!post) return res.status(400).send("Post not found");
+    // Si erreur lors de la MAJ du post, réponse 400 + erreur
+    if (!docs) return res.status(400).send("Post not found :" + err);
 
-    // Tentative de mise à jour de l'utilisateur dans la base de données
+    // Tentative de MAJ de l'user dans la BD
     const user = await UserModel.findByIdAndUpdate(
       req.body.id,
+      // $addToSet = ajout
       { $addToSet: { likes: req.params.id } },
       { new: true }
     );
 
-    // Si une erreur se produit lors de la mise à jour de l'utilisateur, une réponse avec un statut 400 est renvoyée, contenant l'erreur
-    if (!user) return res.status(400).send("User not found");
+    // Si erreur lors de la MAJ de l'user, réponse 400 + l'erreur
+    if (!user) return res.status(400).send("User not found :" + err);
 
-    // Si tout se passe bien, une réponse avec un statut 200 est renvoyée, contenant le post et l'utilisateur mis à jour
+    // Si ok, réponse 200 + le post et l'user mis à jour
     return res.status(200).json({ post, user });
   } catch (err) {
-    // Si une erreur se produit lors de l'exécution du code, une réponse avec un statut 400 est renvoyée, contenant l'erreur
+    // Si erreur, réponse 400 + l'erreur
     return res.status(400).send(err);
   }
 };
 
-
 //
 //
-// Fonction pour unliker un post_________________________________________________
+// Fonction pour unliker un post______________________________________________
 module.exports.unlikePost = async (req, res) => {
   // Vérification de la validité de l'id passé en paramètre de la requête
   if (!ObjectID.isValid(req.params.id))
     return res.status(400).send("Unknown ID : " + req.params.id);
+
+  try {
+    // Tentative de MAJ du post dans la BD
+    const docs = await PostModel.findByIdAndUpdate(
+      req.params.id,
+      // $pull = suppression
+      { $pull: { likers: req.body.id } },
+      { new: true }
+    );
+
+    // Si erreur lors de la MAJ du post, réponse 400 + erreur
+    if (!docs) return res.status(400).send("Post not found :" + err);
+
+    // Tentative de MAJ de l'user dans la BD
+    const user = await UserModel.findByIdAndUpdate(
+      req.body.id,
+      // $pull = suppression
+      { $pull: { likes: req.params.id } },
+      { new: true }
+    );
+
+    // Si erreur lors de la MAJ de l'user, réponse 400 + l'erreur
+    if (!user) return res.status(400).send("User not found :" + err);
+
+    // Si ok, réponse 200 + le post et l'user mis à jour
+    return res.status(200).json({ post, user });
+  } catch (err) {
+    // Si erreur, réponse 400 + l'erreur
+    return res.status(400).send(err);
+  }
 };
+
+//
+//
+//! (à verifier car envoie en double via postman)
+// Fonction pour commenter un post____________________________________________
+module.exports.commentPost = async (req, res) => {
+  // Vérification de la validité de l'id passé en paramètre de la requête
+  if (!ObjectID.isValid(req.params.id))
+    return res.status(400).send("Unknown ID : " + req.params.id);
+
+  try {
+    const docs = await PostModel.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          comments: {
+            commenterId: req.body.commenterId,
+            commenterPseudo: req.body.commenterPseudo,
+            text: req.body.text,
+            timestamp: new Date().getTime(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!docs) return res.status(404).send("No comment found :" + err);
+    else return res.send(docs);
+  } catch (err) {
+    return res.status(400).send(err);
+  }
+};
+
+//
+//
+// Fonction d'édition d'un commentaire_______________________________________
+module.exports.editCommentPost = async (req, res) => {
+  // Vérification de la validité de l'id passé en paramètre de la requête
+  if (!ObjectID.isValid(req.params.id))
+    return res.status(400).send("Unknown ID : " + req.params.id);
+
+  try {
+    const docs = await PostModel.findById(req.params.id);
+
+    const theComment = docs.comments.find((comment) =>
+      comment._id.equals(req.body.commentId)
+    );
+
+    if (!theComment) return res.status(404).send("Comment not found :" + err);
+
+    theComment.text = req.body.text;
+
+    try {
+      const updatedDocs = await docs.save();
+      return res.status(200).send(updatedDocs);
+    } catch (err) {
+      return res.status(500).send(err);
+    }
+  } catch (err) {
+    return res.status(500).send(err);
+  }
+};
+
+//
+//
+//  Fonction pour supprimer un commentaire_____________________________________
+module.exports.deleteCommentPost = async (req, res) => {
+  if (!ObjectID.isValid(req.params.id))
+    return res.status(400).send("Unknown ID : " + req.params.id);
+
+  try {
+    const docs = await PostModel.findByIdAndUpdate(
+      req.params.id,
+      {
+        $pull: {
+          comments: {
+            _id: req.body.commentId,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!docs) {
+      return res.status(404).send("Post not found");
+    }
+
+    return res.send(docs);
+  } catch (err) {
+    return res.status(400).send(err);
+  }
+};
+
