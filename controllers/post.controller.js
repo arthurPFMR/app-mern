@@ -81,7 +81,7 @@ module.exports.deletePost = async (req, res) => {
     // Tentative de suppression du post dans la BD
     const docs = await PostModel.findByIdAndDelete(req.params.id);
     // Si la suppression ok, le post supprimé est envoyé en réponse
-    if (!docs) throw Error("No post found :" + err);
+    if (!docs) throw Error("No post found ");
     res.send(docs);
   } catch (err) {
     // Si erreur, log de l'erreur
@@ -107,7 +107,7 @@ module.exports.likePost = async (req, res) => {
     );
 
     // Si erreur lors de la MAJ du post, réponse 400 + erreur
-    if (!docs) return res.status(400).send("Post not found :" + err);
+    if (!docs) return res.status(400).send("Post not found");
 
     // Tentative de MAJ de l'user dans la BD
     const user = await UserModel.findByIdAndUpdate(
@@ -118,7 +118,7 @@ module.exports.likePost = async (req, res) => {
     );
 
     // Si erreur lors de la MAJ de l'user, réponse 400 + l'erreur
-    if (!user) return res.status(400).send("User not found :" + err);
+    if (!user) return res.status(400).send("User not found");
 
     // Si ok, réponse 200 + le post et l'user mis à jour
     return res.status(200).json({ post, user });
@@ -169,7 +169,6 @@ module.exports.unlikePost = async (req, res) => {
 
 //
 //
-//! (à verifier car envoie en double via postman)
 // Fonction pour commenter un post____________________________________________
 module.exports.commentPost = async (req, res) => {
   // Vérification de la validité de l'id passé en paramètre de la requête
@@ -177,9 +176,12 @@ module.exports.commentPost = async (req, res) => {
     return res.status(400).send("Unknown ID : " + req.params.id);
 
   try {
+    // Tentative de MAJ du post selon l'id dans la BD
     const docs = await PostModel.findByIdAndUpdate(
+      // ID du post à mettre à jour
       req.params.id,
       {
+        // $push = ajout d'un nouveau commentaire au tableau comments du post
         $push: {
           comments: {
             commenterId: req.body.commenterId,
@@ -191,10 +193,12 @@ module.exports.commentPost = async (req, res) => {
       },
       { new: true }
     );
-
+    // Aucun docs = erreur
     if (!docs) return res.status(404).send("No comment found :" + err);
+    // Sinon envoie du docs MAJ
     else return res.send(docs);
   } catch (err) {
+    // Si erreur, réponse 400 + l'erreur
     return res.status(400).send(err);
   }
 };
@@ -208,23 +212,31 @@ module.exports.editCommentPost = async (req, res) => {
     return res.status(400).send("Unknown ID : " + req.params.id);
 
   try {
+    // Tentative de MAJ du post selon l'id dans la BD
     const docs = await PostModel.findById(req.params.id);
 
+    // Recherche du  commentaire à modifier dans le tableau comments du post
     const theComment = docs.comments.find((comment) =>
       comment._id.equals(req.body.commentId)
     );
 
+    // Commentaire non trouvé = réponse 404 + erreur
     if (!theComment) return res.status(404).send("Comment not found :" + err);
-
+    // Commentaire MAJ avec le texte fourni dans la requête.
     theComment.text = req.body.text;
 
+    // Gestion des erreurs éventuelles lors de l'enregistrement du post MAJ
     try {
+      // Enregistrement du post MAJ dans la BD
       const updatedDocs = await docs.save();
+      // Si le post save ok, il est envoyé en réponse
       return res.status(200).send(updatedDocs);
     } catch (err) {
+      // Si erreur, réponse 500 + erreur
       return res.status(500).send(err);
     }
   } catch (err) {
+    // Si erreur, réponse 500 + erreur
     return res.status(500).send(err);
   }
 };
@@ -237,25 +249,28 @@ module.exports.deleteCommentPost = async (req, res) => {
     return res.status(400).send("Unknown ID : " + req.params.id);
 
   try {
+    // Tentative de MAJ du post selon l'id dans la BD
     const docs = await PostModel.findByIdAndUpdate(
+      // ID du post à mettre à jour
       req.params.id,
       {
+        // $pull = supprimer
         $pull: {
           comments: {
-            _id: req.body.commentId,
+            _id: req.body.commentId, // ID du commentaire à supprimer
           },
         },
       },
       { new: true }
     );
-
+    // Aucun docs = erreur
     if (!docs) {
       return res.status(404).send("Post not found");
     }
-
+    // Si aucun docs a été trouvé et MAJ, il est envoyé en réponse
     return res.send(docs);
   } catch (err) {
+    // Si erreur, réponse 400 + erreur
     return res.status(400).send(err);
   }
 };
-
