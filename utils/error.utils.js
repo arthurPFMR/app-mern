@@ -4,7 +4,7 @@ module.exports.signUpErrors = (err) => {
   // -------------------
   if (err.message.includes("pseudo"))
     errors.pseudo = "Désolé, le pseudo est incorrect ou déjà utilisé";
-// 11000 code erreur depuis mongoDB
+  // 11000 code erreur depuis mongoDB
   if (err.code === 11000 && Object.keys(err.keyValue)[0].includes("pseudo"))
     errors.pseudo = "Ce pseudo existe déjà";
   // -------------------
@@ -20,8 +20,8 @@ module.exports.signUpErrors = (err) => {
   return errors;
 };
 
-// 
-// 
+//
+//
 // Fonction de gestion d'erreur pour la connexion_____________________________
 module.exports.signInErrors = (err) => {
   let errors = { email: "", password: "" };
@@ -31,6 +31,21 @@ module.exports.signInErrors = (err) => {
 
   if (err.message.includes("password"))
     errors.password = "Le mot de passe saisit est ne correspond pas";
+
+  return errors;
+};
+
+//
+//
+// Fonction de gestion d'erreur pour l'upload de límg de profil
+module.exports.uploadErrors = (err) => {
+  let errors = { format: "", maxSize: "" };
+
+  if (err.message.includes("invalide file"))
+    errors.format = "Format incompatible";
+
+  if (err.message.includes("max size"))
+    errors.maxSize = "Le fichier ne doit pas dépasser 500ko";
 
   return errors;
 };

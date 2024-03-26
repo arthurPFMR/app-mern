@@ -217,6 +217,7 @@ module.exports.editCommentPost = async (req, res) => {
 
     // Recherche du  commentaire à modifier dans le tableau comments du post
     const theComment = docs.comments.find((comment) =>
+      // Vérifie si l'id du comment dans la BD = à celui dans la requète
       comment._id.equals(req.body.commentId)
     );
 
