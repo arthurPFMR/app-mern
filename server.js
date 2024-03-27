@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser"); // Middleware pour analyser le corps des requêtes HTTP
 const cookieParser = require("cookie-parser"); // Middleware pour analyser les cookies
+const cors = require("cors");
 
 // Importation des routes utilisateur
 const userRoutes = require("./routes/user.routes");
@@ -16,6 +17,17 @@ const { checkUser, requireAuth } = require("./middlware/auth.middleware");
 
 // Création de l'app Express
 const app = express();
+
+const corsOptions = {
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+  allowedHeaders: ["sessionId", "Content-Type"],
+  exposedHeaders: ["sessionId"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+};
+
+app.use(cors(corsOptions));
 
 // Utilisation de bodyParser pour traiter le corps des requêtes au format JSON et urlencoded
 app.use(bodyParser.json());
