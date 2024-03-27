@@ -1,5 +1,4 @@
 const router = require("express").Router();
-
 const authController = require("../controllers/auth.controller");
 const userController = require("../controllers/user.controller");
 const uploadController = require("../controllers/upload.controller");
@@ -15,6 +14,7 @@ router.get("/:id", userController.userInfo); // Récupération des infos d'un us
 router.put("/:id", userController.updateUser); // Mis à jour des infos d'un user
 router.delete("/:id", userController.deleteUser); // Suppression d'un user
 
+// Import  de multer + route upload img profil
 import("multer").then((multerModule) => {
   multer = multerModule.default;
   const upload = multer();

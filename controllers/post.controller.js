@@ -1,28 +1,55 @@
 const postModel = require("../models/post.model");
 const PostModel = require("../models/post.model");
 const UserModel = require("../models/user.model");
+const { uploadErrors } = require("../utils/error.utils");
+const fs = require("fs");
+const { promisify } = require("util");
+const pipeline = promisify(require("stream").pipeline);
 const ObjectID = require("mongoose").Types.ObjectId; // Pour manipuler les ID de MongoDB
 
 //
 //
 // Fonction de création d'un post______________________________________________
 module.exports.createPost = async (req, res) => {
-  // Création d'un nouvel objet post avec les données de la requête
+  let fileName;
+  if (req.file !== null) {
+    try {
+      if (
+        req.file.detectedMimeType != "image/jpg" &&
+        req.file.detectedMimeType != "image/png" &&
+        req.file.detectedMimeType != "image/jpeg"
+      )
+        throw Error("invalid file");
+
+      if (req.file.size > 500000) throw Error("max size");
+    } catch (err) {
+      console.log(err);
+      const errors = uploadErrors(err);
+      return res.status(201).json({ errors });
+    }
+    fileName = req.body.posterId + Date.now() + ".jpg";
+
+    await pipeline(
+      req.file.stream,
+      fs.createWriteStream(
+        `${__dirname}/../client/public/upload/post/${fileName}`
+      )
+    );
+  }
+
   const newPost = new postModel({
     posterId: req.body.posterId,
     message: req.body.message,
+    picture: req.file !== null ? "./upload/post/" + fileName : "",
     video: req.body.video,
     likers: [],
     comments: [],
   });
 
   try {
-    // Tentative de sauvegarde du new post dans la BD
-    const docs = await newPost.save();
-    // Si sauvegarde ok, réponse 201 + post
-    return res.status(201).json(docs);
+    const post = await newPost.save();
+    return res.status(201).json(post);
   } catch (err) {
-    // Si erreur, log de l'erreur
     return res.status(400).send(err);
   }
 };

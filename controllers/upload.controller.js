@@ -30,7 +30,7 @@ module.exports.uploadProfil = async (req, res) => {
   try {
     const user = await UserModel.findByIdAndUpdate(
       req.body.userId,
-      { $set: { picture: "../client/public/upload/profil/" + fileName } },
+      { $set: { picture: "./upload/profil/" + fileName } },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
