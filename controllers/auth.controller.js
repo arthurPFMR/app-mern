@@ -47,7 +47,7 @@ module.exports.signIn = async (req, res) => {
   } catch (err) {
     // Gestion des erreurs avec errors.utils si la tentative de connexion échoue
     const errors = signInErrors(err);
-    res.status(500).json({ errors });
+    res.status(200).json({ errors });
   }
 };
 
