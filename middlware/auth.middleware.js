@@ -15,8 +15,10 @@ module.exports.checkUser = (req, res, next) => {
       if (err) {
         // On définit 'user' comme null dans les variables locales de la réponse
         res.locals.user = null;
+        // __________________________________________
         // On supprime le cookie 'jwt'
-        res.cookie("jwt", "", { maxAge: 1 });
+        // res.cookie("jwt", "", { maxAge: 1 });
+        //___________________________________________
         // On passe au middleware suivant
         next();
       } else {
